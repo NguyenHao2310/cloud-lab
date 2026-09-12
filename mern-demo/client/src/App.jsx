@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 
-// Địa chỉ Backend — nếu chạy trong Codespaces, bạn có thể cần thay bằng URL public của port 5000
-// (xem PORTS tab, chuột phải vào port 5000 -> Copy Port Address), ví dụ dạng:
-// https://<ten-codespace>-5000.app.github.dev
-const API_URL = 'http://localhost:5000/api/students';
+// Câu 77: Địa chỉ Backend.
+// Khi Frontend mở qua URL public của Codespaces, request tới http://localhost:5000 sẽ KHÔNG chạy
+// (localhost lúc này là máy của người dùng, không phải Codespace). Phải trỏ tới URL public
+// của port 5000 (PORTS tab -> Copy Port Address).
+// Giá trị được nhúng lúc BUILD qua biến VITE_API_URL (xem Dockerfile + docker-compose build args).
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE}/api/students`;
 
 function App() {
   const [students, setStudents] = useState([]);
@@ -59,7 +62,7 @@ function App() {
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'sans-serif' }}>
-      <h1>Quản lý sinh viên</h1>
+      <h1>Quản lý sinh viên - Ver 2.0</h1>
 
       {/* Câu 48: Form nhập liệu */}
       <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>

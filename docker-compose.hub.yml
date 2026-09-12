@@ -1,0 +1,23 @@
+services:
+  backend:
+    image: haonguyen2310/mern-backend:1.0
+    container_name: mern-backend
+    # Dùng default bridge (docker0) — xem giải thích trong docker-compose.yml
+    network_mode: bridge
+    ports:
+      - "5000:5000"
+    environment:
+      # Đọc từ file .env (đã được .gitignore) — không hard-code chuỗi kết nối vào compose
+      - MONGODB_URI=${MONGODB_URI}
+      - PORT=5000
+    restart: unless-stopped
+
+  frontend:
+    image: haonguyen2310/mern-frontend:2.0
+    container_name: mern-frontend
+    network_mode: bridge
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

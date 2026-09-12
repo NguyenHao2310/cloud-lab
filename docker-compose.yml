@@ -2,6 +2,13 @@ services:
   backend:
     build: ./mern-demo/server # 👈 Thêm mern-demo/ vào trước server
     container_name: mern-backend
+    # Dùng default bridge (docker0) thay vì network riêng của compose.
+    # Lý do: Codespace chạy song song 2 backend iptables; chain FORWARD của bảng
+    # "legacy" có policy DROP và chỉ ACCEPT cho docker0. Network do compose tự tạo
+    # không khớp rule nào -> container mất hoàn toàn kết nối ra ngoài, biểu hiện là
+    # mongodb+srv báo querySrv ETIMEOUT/ESERVFAIL. Rule cho docker0 được Docker tạo
+    # lại tự động mỗi lần Codespace khởi động, nên cách này tự lành sau restart.
+    network_mode: bridge
     ports:
       - "5000:5000"
     environment:
@@ -9,8 +16,13 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./mern-demo/client # 👈 Thêm mern-demo/ vào trước client
+    build:
+      context: ./mern-demo/client # 👈 Thêm mern-demo/ vào trước client
+      args:
+        # Câu 77: nhúng URL Backend public vào bundle lúc build
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
     container_name: mern-frontend
+    network_mode: bridge
     ports:
       - "3000:80"
     depends_on:

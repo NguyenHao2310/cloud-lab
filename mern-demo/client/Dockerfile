@@ -14,6 +14,11 @@ RUN npm install
 # Câu 55: Copy source code React
 COPY . .
 
+# Câu 77: URL Backend truyền vào lúc build.
+# Vite nhúng biến VITE_* vào bundle tĩnh tại thời điểm build, nên phải set TRƯỚC npm run build.
+ARG VITE_API_URL=http://localhost:5000
+ENV VITE_API_URL=$VITE_API_URL
+
 # Câu 56: Build production
 RUN npm run build
 
