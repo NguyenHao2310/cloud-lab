@@ -6,7 +6,7 @@ import './App.css';
 // (localhost lúc này là máy của người dùng, không phải Codespace). Phải trỏ tới URL public
 // của port 5000 (PORTS tab -> Copy Port Address).
 // Giá trị được nhúng lúc BUILD qua biến VITE_API_URL (xem Dockerfile + docker-compose build args).
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 const API_URL = `${API_BASE}/api/students`;
 
 function App() {
