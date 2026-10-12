@@ -1,0 +1,7 @@
+{
+  "status": 400,
+  "purpose": "Bài 6 kiểm tra validation: không tạo bản ghi khi thiếu dữ liệu",
+  "body": {
+    "error": "Student validation failed: email: Path `email` is required., name: Path `name` is required., studentId: Path `studentId` is required."
+  }
+}

@@ -1,7 +1,7 @@
 if (!globalThis.crypto) globalThis.crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const mongoose = require('mongoose');
 
 mongoose.set('bufferCommands', false);
@@ -11,6 +11,7 @@ mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 })
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const APP_VERSION = '2.0';
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -35,9 +36,25 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({ service: 'Student Management API', version: APP_VERSION, students: '/api/students', health: '/health' });
+});
+
+// Chỉ nhận traffic khi kết nối Atlas đã sẵn sàng.
+app.get(['/health', '/api/health'], (req, res) => {
+  const ready = mongoose.connection.readyState === 1;
+  res.status(ready ? 200 : 503).json({
+    status: ready ? 'UP' : 'DOWN',
+    version: APP_VERSION,
+    database: ready ? 'connected' : 'unavailable',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
 // Câu 22: API xác nhận Backend hoạt động
 app.get('/api/hello', (req, res) => {
-  res.json({ message: 'Backend đang hoạt động!' });
+  res.json({ message: 'Backend đang hoạt động!', version: APP_VERSION });
 });
 
 const Student = require('./models/Student');
@@ -65,7 +82,7 @@ app.post('/api/students', async (req, res) => {
 // Câu 38: PUT cập nhật sinh viên
 app.put('/api/students/:id', async (req, res) => {
   try {
-    const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after', runValidators: true });
     if (!updated) return res.status(404).json({ error: 'Không tìm thấy sinh viên' });
     res.json(updated);
   } catch (err) {
@@ -88,6 +105,16 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend bài 5 v1.1 đang chạy trên cổng ${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend bài 6 v${APP_VERSION} tự động triển khai trên cổng ${PORT}`);
+});
+
+// Hoàn tất request đang xử lý trước khi Render thay instance.
+process.on('SIGTERM', () => {
+  console.log('Nhận SIGTERM: đóng HTTP server và MongoDB sau các request đang xử lý.');
+  server.close(async () => {
+    await mongoose.disconnect();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10000).unref();
 });

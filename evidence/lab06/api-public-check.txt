@@ -1,0 +1,4 @@
+HTTP 200
+Endpoint: https://mern-frontend-235692.onrender.com/api/students
+Content-Type: application/json
+Rows: 5

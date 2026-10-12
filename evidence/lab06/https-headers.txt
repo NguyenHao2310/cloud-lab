@@ -1,0 +1,3 @@
+HTTPS HEAD: HTTP 200
+Strict-Transport-Security: 
+HTTP redirect verified: 301 -> https://mern-frontend-235692.onrender.com/

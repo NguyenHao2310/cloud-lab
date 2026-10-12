@@ -1,0 +1,8 @@
+{
+  "Host": "mern-frontend-235692.onrender.com",
+  "Protocol": "Tls13",
+  "Subject": "CN=onrender.com",
+  "Issuer": "CN=WE1, O=Google Trust Services, C=US",
+  "NotBefore": "2026-09-21T22:04:31.0000000Z",
+  "NotAfter": "2026-12-20T23:04:28.0000000Z"
+}

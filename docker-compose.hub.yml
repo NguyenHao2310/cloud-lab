@@ -1,9 +1,7 @@
 services:
   backend:
-    image: haonguyen2310/mern-backend:1.1
+    image: haonguyen2310/mern-backend:latest
     container_name: mern-backend
-    # Dùng default bridge (docker0) — xem giải thích trong docker-compose.yml
-    network_mode: bridge
     ports:
       - "5000:5000"
     environment:
@@ -13,13 +11,13 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: haonguyen2310/mern-frontend:2.0
+    image: haonguyen2310/mern-frontend:latest
     container_name: mern-frontend
-    network_mode: bridge
     ports:
       - "3000:80"
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
+      - PORT=80
+      - BACKEND_URL=http://backend:5000
     depends_on:
       - backend
     restart: unless-stopped

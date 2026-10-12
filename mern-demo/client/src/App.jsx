@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 
-// Bài 5: ưu tiên cấu hình Render lúc container khởi động, rồi đến cấu hình Vite lúc build.
-const API_BASE = (window.__APP_CONFIG__?.API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/$/, '');
-const API_URL = `${API_BASE}/api/students`;
+// Bài 6: gọi cùng domain; Nginx chuyển tiếp request sang backend.
+const API_URL = '/api/students';
 
 async function requestStudents(url, options) {
   const res = await fetch(url, options);
@@ -84,7 +83,8 @@ function App() {
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'sans-serif' }}>
-      <h1>Quản lý sinh viên - Ver 2.0</h1>
+      <h1>Quản lý sinh viên</h1>
+      <p style={{ marginBottom: 24 }}>Phiên bản 2.0 - Production Cloud PaaS (Auto-Deployed)</p>
       {loading && <p role="status">Đang tải dữ liệu… Lần khởi động đầu trên Render có thể mất một phút.</p>}
       {error && <p role="alert" style={{ color: '#b42318' }}>{error} <button type="button" onClick={fetchStudents}>Thử lại</button></p>}
 
