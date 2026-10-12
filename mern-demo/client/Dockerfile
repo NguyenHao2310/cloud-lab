@@ -1,6 +1,6 @@
 # ---- Stage 1: Build React app ----
 # Câu 51: Base Image cho quá trình build
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 # Câu 52: Thư mục làm việc
 WORKDIR /app
@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Câu 54: Cài đặt package
-RUN npm install
+RUN npm ci
 
 # Câu 55: Copy source code React
 COPY . .
@@ -28,6 +28,8 @@ FROM nginx:alpine
 # Copy kết quả build (thư mục dist) sang thư mục phục vụ mặc định của Nginx
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker-entrypoint.d/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
+RUN chmod +x /docker-entrypoint.d/40-runtime-config.sh
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,24 +1,36 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 
-// Câu 77: Địa chỉ Backend.
-// Khi Frontend mở qua URL public của Codespaces, request tới http://localhost:5000 sẽ KHÔNG chạy
-// (localhost lúc này là máy của người dùng, không phải Codespace). Phải trỏ tới URL public
-// của port 5000 (PORTS tab -> Copy Port Address).
-// Giá trị được nhúng lúc BUILD qua biến VITE_API_URL (xem Dockerfile + docker-compose build args).
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
+// Bài 5: ưu tiên cấu hình Render lúc container khởi động, rồi đến cấu hình Vite lúc build.
+const API_BASE = (window.__APP_CONFIG__?.API_URL ?? import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/$/, '');
 const API_URL = `${API_BASE}/api/students`;
+
+async function requestStudents(url, options) {
+  const res = await fetch(url, options);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `API trả về lỗi ${res.status}`);
+  return data;
+}
 
 function App() {
   const [students, setStudents] = useState([]);
   const [form, setForm] = useState({ studentId: '', name: '', email: '' });
   const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // Câu 47: lấy danh sách sinh viên
   const fetchStudents = async () => {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    setStudents(data);
+    try {
+      setError('');
+      const data = await requestStudents(API_URL);
+      if (!Array.isArray(data)) throw new Error('API chưa trả về danh sách sinh viên.');
+      setStudents(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -32,22 +44,27 @@ function App() {
   // Câu 49: gửi dữ liệu POST (hoặc PUT nếu đang sửa)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      await fetch(`${API_URL}/${editingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      setEditingId(null);
-    } else {
-      await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+    try {
+      setError('');
+      if (editingId) {
+        await requestStudents(`${API_URL}/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+        setEditingId(null);
+      } else {
+        await requestStudents(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+      }
+      setForm({ studentId: '', name: '', email: '' });
+      await fetchStudents();
+    } catch (err) {
+      setError(err.message);
     }
-    setForm({ studentId: '', name: '', email: '' });
-    fetchStudents();
   };
 
   const handleEdit = (student) => {
@@ -56,13 +73,20 @@ function App() {
   };
 
   const handleDelete = async (id) => {
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-    fetchStudents();
+    try {
+      setError('');
+      await requestStudents(`${API_URL}/${id}`, { method: 'DELETE' });
+      await fetchStudents();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', fontFamily: 'sans-serif' }}>
       <h1>Quản lý sinh viên - Ver 2.0</h1>
+      {loading && <p role="status">Đang tải dữ liệu… Lần khởi động đầu trên Render có thể mất một phút.</p>}
+      {error && <p role="alert" style={{ color: '#b42318' }}>{error} <button type="button" onClick={fetchStudents}>Thử lại</button></p>}
 
       {/* Câu 48: Form nhập liệu */}
       <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
@@ -82,6 +106,7 @@ function App() {
         />{' '}
         <input
           name="email"
+          type="email"
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
